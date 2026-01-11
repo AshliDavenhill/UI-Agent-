@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constrained Research Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .chat-container {
+            padding: 30px;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .agent-message {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .user-message {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: right;
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .confidence-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .confidence-high { background: #4caf50; }
+        .confidence-medium { background: #ff9800; }
+        .confidence-low { background: #f44336; }
+
+        .progress-indicator {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .action-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .form-group {
+            margin-top: 15px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .status-in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .input-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover {
+            background: #5568d3;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .correction-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .correction-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .correction-button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .correction-button:hover {
+            background: #f57c00;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Research Agent</h1>
+            <p>Constrained responses • Step-by-step progress • Confidence indicators</p>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="agent-message">
+                <div class="message-text">Hello! I'm your research assistant. What would you like me to research?</div>
+                <div class="confidence-indicator">
+                    <span>Confidence:</span>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill confidence-high" style="width: 100%"></div>
+                    </div>
+                    <span>High</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="query-input" 
+                    id="queryInput" 
+                    placeholder="Enter your research query..."
+                    onkeypress="if(event.key === 'Enter') sendQuery()"
+                >
+                <button class="send-button" onclick="sendQuery()" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTaskId = null;
+        let isLoading = false;
+
+        function getConfidenceClass(confidence) {
+            if (confidence >= 0.7) return 'confidence-high';
+            if (confidence >= 0.4) return 'confidence-medium';
+            return 'confidence-low';
+        }
+
+        function getConfidenceLabel(confidence) {
+            if (confidence >= 0.7) return 'High';
+            if (confidence >= 0.4) return 'Medium';
+            return 'Low';
+        }
+
+        function addMessage(text, isUser = false, response = null) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'agent-message'}`;
+            
+            let html = `<div class="message-text">${text}</div>`;
+            
+            if (response && !isUser) {
+                // Confidence indicator
+                const confidence = response.confidence || 0.5;
+                html += `
+                    <div class="confidence-indicator">
+                        <span>Confidence:</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill ${getConfidenceClass(confidence)}" style="width: ${confidence * 100}%"></div>
+                        </div>
+                        <span>${getConfidenceLabel(confidence)}</span>
+                    </div>
+                `;
+                
+                // Progress indicator
+                if (response.total_steps > 1) {
+                    const progress = (response.step / response.total_steps) * 100;
+                    html += `
+                        <div class="progress-indicator">
+                            Step ${response.step} of ${response.total_steps}
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Action buttons
+                if (response.action === 'button' && response.options && response.options.length > 0) {
+                    html += '<div class="button-group">';
+                    response.options.forEach(option => {
+                        html += `<button class="action-button" onclick="handleOption('${option}', '${response.task_id}')">${option}</button>`;
+                    });
+                    html += '</div>';
+                }
+                
+                // Form input
+                if (response.action === 'form') {
+                    html += `
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="formInput_${response.task_id}" placeholder="Enter your response...">
+                            <button class="action-button" onclick="handleFormSubmit('${response.task_id}')">Submit</button>
+                        </div>
+                    `;
+                }
+                
+                // Correction section
+                if (response.can_correct) {
+                    html += `
+                        <div class="correction-section">
+                            <strong>Need to correct something?</strong>
+                            <input type="text" class="correction-input" id="correctionInput_${response.task_id}" placeholder="Describe what to correct...">
+                            <button class="correction-button" onclick="handleCorrection('${response.task_id}')">Apply Correction</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            messageDiv.innerHTML = html;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendQuery() {
+            const input = document.getElementById('queryInput');
+            const query = input.value.trim();
+            
+            if (!query || isLoading) return;
+            
+            isLoading = true;
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<div class="loading"></div>';
+            
+            addMessage(query, true);
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        task_id: currentTaskId
+                    })
+                });
+                
+                const data = await response.json();
+                currentTaskId = data.task_id;
+                
+                addMessage(data.message, false, data);
+                
+            } catch (error) {
+                addMessage(`Error: ${error.message}`, false);
+            } finally {
+                isLoading = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = 'Send';
+            }
+        }
+
+        async function handleOption(option, taskId) {
+            isLoading = true;
+            addMessage(`Selected: ${option}`, true);
+            
+            try {
+                const response = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: option,
+                        task_id: taskId
+                    })
+                });
+                
+                const data = await response.json();
+                addMessage(data.message, false, data);
+                
+            } catch (error) {
+                addMessage(`Error: ${error.message}`, false);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        async function handleFormSubmit(taskId) {
+            const input = document.getElementById(`formInput_${taskId}`);
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            await handleOption(value, taskId);
+            input.value = '';
+        }
+
+        async function handleCorrection(taskId) {
+            const input = document.getElementById(`correctionInput_${taskId}`);
+            const correction = input.value.trim();
+            
+            if (!correction) return;
+            
+            isLoading = true;
+            addMessage(`Correction: ${correction}`, true);
+            
+            try {
+                const response = await fetch('/api/correct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_id: taskId,
+                        correction: correction
+                    })
+                });
+                
+                const data = await response.json();
+                addMessage(data.message, false, data);
+                
+            } catch (error) {
+                addMessage(`Error: ${error.message}`, false);
+            } finally {
+                isLoading = false;
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

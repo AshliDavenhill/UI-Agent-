@@ -1,0 +1,12 @@
+langchain
+Wikipedia
+langchain-community
+langchain-openai
+langchain-anthropic
+langchain-core
+python-dotenv
+pydantic
+duckduckgo-search
+ddgs
+flask
+flask-cors
