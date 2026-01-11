@@ -221,6 +221,10 @@ The system operates as a guided research workflow, not a chatbot.
 │ - Save / Storage tool     │
 └───────────────────────────┘
 
+## Screenshot 1 — 
+[Option 1 – UI-Constrained Agent Screenshot](screenshots/ui-initial.png)
+
+
 
 ## Response Types
 
