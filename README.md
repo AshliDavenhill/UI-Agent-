@@ -222,8 +222,7 @@ The system operates as a guided research workflow, not a chatbot.
 └───────────────────────────┘
 
 ## Screenshot 1 — 
-[Option 1 – UI-Constrained Agent Screenshot](screenshots/ui-initial.png)
-
+Screenshot/Screenshot 2026-01-11 at 16.39.49.png
 
 
 ## Response Types
