@@ -79,7 +79,7 @@ When responding:
 Example good response (under 120 chars): "Searching web for your topic. Choose: Web, Wikipedia, or Both?"
 """
 
-agent_runnable = create_agent(llm, tools, system_prompt=system_prompt)
+rom langchain.agents import create_openai_tools_agent, AgentExecutor
 
 def truncate_message(msg: str, max_len: int = 120) -> str:
     """Ensure message is within character limit"""
@@ -186,24 +186,13 @@ def handle_query():
         # Execute agent with the new API
         config = {"configurable": {"thread_id": task_id}}
         response = agent_runnable.invoke({"input": query}, config)
+              # Execute agent
+response = agent_executor.invoke({"input": query})
+
+# Extract LLM output correctly
+output_text = response.get("output", "")
+
         
-        # Extract output from response
-        if isinstance(response, dict):
-            # Handle different response formats
-            if "messages" in response:
-                # Get the last message from the agent
-                messages = response.get("messages", [])
-                if messages:
-                    last_msg = messages[-1]
-                    output_text = last_msg.content if hasattr(last_msg, 'content') else str(last_msg)
-                else:
-                    output_text = str(response)
-            elif "output" in response:
-                output_text = response.get("output", "")
-            else:
-                output_text = str(response)
-        else:
-            output_text = str(response)
         
         # Update chat history
         task["chat_history"].append(("human", query))
@@ -350,23 +339,13 @@ def handle_correction():
         # Execute agent with the new API
         config = {"configurable": {"thread_id": task_id}}
         response = agent_runnable.invoke({"input": query}, config)
+                # Execute agent
+response = agent_executor.invoke({"input": query})
+
+# Extract LLM output correctly
+output_text = response.get("output", "")
         
-        # Extract output from response
-        if isinstance(response, dict):
-            if "messages" in response:
-                messages = response.get("messages", [])
-                if messages:
-                    last_msg = messages[-1]
-                    output_text = last_msg.content if hasattr(last_msg, 'content') else str(last_msg)
-                else:
-                    output_text = str(response)
-            elif "output" in response:
-                output_text = response.get("output", "")
-            else:
-                output_text = str(response)
-        else:
-            output_text = str(response)
-        
+    
         output_text = truncate_message(output_text, 120)
         
         task["chat_history"].append(("human", query))
